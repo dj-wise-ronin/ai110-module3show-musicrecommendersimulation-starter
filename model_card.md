@@ -6,68 +6,67 @@
 
 ---
 
-## 2. Intended Use  
+## 2. Goal / Task
 
-This recommender is designed to simulate how music streaming platforms match song attributes to user preferences. It generates a ranked list of the top 3-5 songs from a small catalog based on a user's favorite genre, mood, target energy, and acoustic preference. This model is intended for classroom exploration and educational purposes only.
+VibeEngine 1.0 is designed to predict song relevance for a user based on their specific "taste profile." It calculates a numerical score for every song in its catalog to suggest the top 3-5 tracks that best match the user's current musical "vibe."
 
 ---
 
-## 3. How the Model Works  
+## 3. How the Model Works (Algorithm Summary)
 
-VibeEngine 1.0 uses a "Weighted Scoring" approach to compare songs. It looks at several features:
-- **Genre and Mood:** It gives high priority (bonus points) to songs that exactly match the user's favorite genre and current mood.
-- **Energy and Positiveness:** It measures the "distance" between the song's energy level and what the user wants, rewarding songs that are closer to the target.
-- **Acoustic vs. Electronic:** It checks if the song's acousticness matches whether the user likes acoustic or electronic music.
+The model uses a simple "Point System" to judge songs:
+- **Genre & Mood:** It gives large "bonus points" if a song is in the user's favorite genre (+2.0) or matches their current mood (+1.5).
+- **The Energy Gap:** It looks at how far a song's energy is from the user's target. The closer the song is to that target, the more points it gets (+1.0 max).
+- **Acoustic Match:** It gives a small boost (+1.0) if the song is acoustic/electronic and matches the user's preference.
 
-Each match is multiplied by a "weight" (Genre is worth more than Energy, for example) to calculate a final score. The songs with the highest total scores are recommended first.
+The system then ranks all songs from highest to lowest score and picks the winners.
 
 ---
 
 ## 4. Data  
 
-The model uses a small dataset (`songs.csv`) containing 10 tracks.
-- **Genres:** Pop, Lofi, Rock, Ambient, Jazz, Indie Pop, Synthwave.
-- **Moods:** Happy, Chill, Intense, Relaxed, Moody, Focused.
-- **Attributes:** All songs have numeric values for energy, valence (positiveness), tempo, and acousticness.
-- **Limitations:** The dataset is very small and primarily reflects a modern, Western-centric selection of genres.
+- **Catalog Size:** 20 songs.
+- **Features:** Genre, Mood, Energy (0.0-1.0), Tempo (BPM), Valence, and Acousticness.
+- **Limitations:** The data is small and lacks variety in non-Western genres. It also depends on subjective tags (one person's "Happy" might be another's "Annoying").
 
 ---
 
-## 5. Strengths  
+## 5. Observed Behavior / Biases
 
-- **Predictability:** The model is very good at matching specific genres and moods. If you say you like "Pop" and "Happy," it reliably finds the most energetic Pop songs.
-- **Transparency:** Because the weights are clear, a user can easily understand *why* a song was recommended (e.g., "it matches your genre and energy").
-- **Precision in Vibe:** The distance-based energy rule works better than a simple threshold for users who want mid-range, "chill" vibes.
-
----
-
-## 6. Limitations and Bias 
-
-- **Overfitting to Genre:** Because Genre has a high weight, the system might recommend a song just because it's "Pop," even if the other attributes (energy, mood) are a poor match.
-- **Filter Bubbles:** The model never suggests songs outside of the user's favorite genre, which can lead to a very repetitive listening experience.
-- **Acoustic Binary:** The "likes_acoustic" preference is a simple yes/no, which ignores users who enjoy a mix of both acoustic and electronic textures.
-- **Small Catalog Bias:** In such a small dataset, some genres (like Synthwave or Jazz) only have one song, meaning those users will always get the same single recommendation.
+- **The Genre Bubble:** Because Genre has the highest points, the system often recommends songs that match the genre but fail the "vibe" (energy/mood).
+- **Data Imbalance:** Since 25% of the catalog is Lofi or Ambient, the system is naturally "better" at recommending chill music than high-energy metal or blues.
+- **Linear Penalty:** It penalizes a song that is "slightly too fast" exactly the same as one that is "slightly too slow," which might not match how humans actually feel tempo.
 
 ---
 
-## 7. Evaluation  
+## 6. Evaluation Process  
 
-I evaluated the system by creating several "extreme" user profiles:
-- **The Gym Hero:** High energy, Pop genre, Happy mood.
-- **The Midnight Coder:** Low energy, Lofi genre, Chill mood.
-- **The Metalhead (Testing mismatch):** High energy, Rock genre, but no Rock songs in the catalog (The system correctly fell back to the next best match based on energy).
-I compared the results to my own intuition and found that the Genre and Mood weights correctly prioritized the "feel" of the music.
+I tested the system using three distinct profiles:
+1. **Gym Hero:** High energy/Pop.
+2. **Midnight Coder:** Low energy/Lofi.
+3. **The Conflicted Listener:** High energy requested, but Ambient genre preferred.
+I also ran a **"Weight Shift" experiment** where I swapped the importance of Genre and Energy to see if I could break the "Genre Bubble" and recommend high-intensity music regardless of genre.
 
 ---
 
-## 8. Future Work  
+## 7. Intended Use and Non-Intended Use  
 
-- **Diversity Penalty:** I would add a "diversity score" that subtracts points from songs in the same genre if the top 3 are already full of that genre.
-- **Dynamic Weighting:** Allowing users to choose which feature matters most to them (e.g., "vibe over genre").
-- **Temporal Context:** Incorporating the time of day into the mood calculation.
+- **Intended Use:** For educational exploration of how recommendation scoring works.
+- **Non-Intended Use:** This should **not** be used for a real music platform. It cannot handle more than a few dozen songs and doesn't understand user behavior (likes/skips) or song audio.
+
+---
+
+## 8. Ideas for Improvement  
+
+- **Diversity Boost:** Add a rule that subtracts points if the Top 3 results are all from the same artist or genre.
+- **Temporal Weighting:** Automatically increase the weight of "Mood" during late-night or early-morning hours.
+- **Hybrid Logic:** Incorporate "Collaborative Filtering" (what other similar users liked).
 
 ---
 
 ## 9. Personal Reflection  
 
-I learned that building a recommender is a balance between mathematical precision and human intuition. What surprised me was how a tiny change in weights (like moving Genre from 1.0 to 2.0) could completely shift the "personality" of the algorithm. This project made me realize that even the most advanced apps like Spotify are still fundamentally built on these types of human-designed rules and data hierarchies.
+- **Biggest Learning Moment:** Seeing how a single change in weights (like doubling the Energy points) could turn a "boring" recommender into one that actually found interesting, high-intensity songs I hadn't considered. It showed me that the "personality" of an AI is really just a set of human-designed weights.
+- **AI Tools Experience:** AI tools (like Copilot) were incredible for brainstorming the mathematical "Scoring Rules" and generating the expanded dataset. However, I had to double-check the math—sometimes the AI suggested a formula that would result in negative scores or wouldn't actually "reward" proximity correctly.
+- **The "Feel" of Simple Code:** I was surprised that such a simple math loop (less than 50 lines of code) could produce results that felt "smart." It made me realize that even the most complex apps are often just layers of these simple logic-checks stacked on top of each other.
+- **Next Steps:** If I kept going, I would try to implement a "Group Vibe" mode where it averages the tastes of 3 different users to find one song they would all enjoy.
